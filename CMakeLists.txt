@@ -36,6 +36,8 @@ add_executable(
 	${LUMENSEGMENTATION_SRC}
 	${LUMENSEGMENTATION_INC}
 	main.cpp
+	MyImageViewer.cxx
+	MyImageViewer.h
 	MyImageViewer2.cxx
 	MyImageViewer2.h
 	)

@@ -5,10 +5,10 @@
 #include <vtkSmartPointer.h>
 
 
-class LumenSegmentaiton : public vtkObject
+class LumenSegmentaiton : public vtkAlgorithm
 {
 public:
-	vtkTypeMacro(LumenSegmentaiton, vtkObject);
+	vtkTypeMacro(LumenSegmentaiton, vtkAlgorithm);
 	void PrintSelf(ostream& os, vtkIndent indent);
 
 	static LumenSegmentaiton *New();

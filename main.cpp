@@ -22,7 +22,8 @@
 #include <vtkNIFTIImageReader.h>
 #include <vtkExtractVOI.h>
 #include <vtkInteractorStyleImage.h>
-
+#include "MyImageViewer2.h"
+#include "MyImageViewer2.h"
 #include "vtkImageViewer2.h"
 
 static void CreateData(vtkImageData* data);
@@ -49,16 +50,36 @@ public:
 int main(int, char *[])
 {
 
-	vtkSmartPointer<vtkNIFTIImageReader> niftiImageReader =
+	vtkSmartPointer<vtkNIFTIImageReader> niftiImageReader1 =
 		vtkSmartPointer<vtkNIFTIImageReader>::New();
-	niftiImageReader->SetFileName(
-		"E:\\Andy2\\blood_vessel_v_1.0.0\\Data\\JackyData\\nifti_corrected\\CUBE_T1_corrected.nii");
-	niftiImageReader->Update();
+	niftiImageReader1->SetFileName(
+		"C:\\Users\\jieji\\Desktop\\MACOSX_BUNDLE\\JackyData\\nifti_corrected\\CUBE T1 corrected.nii");
+	niftiImageReader1->Update();
+
+	vtkSmartPointer<vtkNIFTIImageReader> niftiImageReader2 =
+		vtkSmartPointer<vtkNIFTIImageReader>::New();
+	niftiImageReader2->SetFileName(
+		"C:\\Users\\jieji\\Desktop\\MACOSX_BUNDLE\\JackyData\\nifti_corrected\\segmentation_right.nii");
+	niftiImageReader2->Update();
+
+	vtkSmartPointer<vtkLookupTable> lookupTable =
+		vtkSmartPointer<vtkLookupTable>::New();
+	lookupTable->SetNumberOfTableValues(7);
+	lookupTable->SetTableRange(0.0, 6);
+	lookupTable->SetTableValue(0, 0, 0, 0, 0);
+	lookupTable->SetTableValue(1, 1, 0, 0, 1);
+	lookupTable->SetTableValue(2, 0, 0, 1, 0.3);
+	lookupTable->SetTableValue(3, 0, 1, 0, 0.5);
+	lookupTable->SetTableValue(4, 1, 1, 0, 0.8);
+	lookupTable->SetTableValue(5, 0, 1, 1, 0.9);
+	lookupTable->SetTableValue(6, 1, 0, 1, 1);
+	lookupTable->Build();
 
 	vtkSmartPointer<vtkExtractVOI> extractVOI =
 		vtkSmartPointer<vtkExtractVOI>::New();
-	extractVOI->SetInputConnection(niftiImageReader->GetOutputPort());
+	extractVOI->SetInputConnection(niftiImageReader1->GetOutputPort());
 	int voi[6] = { 100,200,200,300,55,55 };
+	//int voi[6] = {0,500,0,500,55,55};
 	extractVOI->SetVOI(voi);
 	extractVOI->Update();
 
@@ -74,7 +95,7 @@ int main(int, char *[])
 #else
 	contourFilter->SetInputData(data);
 #endif
-	contourFilter->GenerateValues(1, 10, 10); // (numContours, rangeStart, rangeEnd)
+	contourFilter->GenerateValues(1, 53, 53); // (numContours, rangeStart, rangeEnd)
 
 											  // Map the contours to graphical primitives
 	vtkSmartPointer<vtkPolyDataMapper> contourMapper =
@@ -86,29 +107,24 @@ int main(int, char *[])
 		vtkSmartPointer<vtkActor>::New();
 	contourActor->SetMapper(contourMapper);
 
-	// Create the outline
-	vtkSmartPointer<vtkOutlineFilter> outlineFilter =
-		vtkSmartPointer<vtkOutlineFilter>::New();
-#if VTK_MAJOR_VERSION <= 5
-	outlineFilter->SetInput(data);
-#else
-	outlineFilter->SetInputData(data);
-#endif
-	vtkSmartPointer<vtkPolyDataMapper> outlineMapper =
-		vtkSmartPointer<vtkPolyDataMapper>::New();
-	outlineMapper->SetInputConnection(outlineFilter->GetOutputPort());
-	vtkSmartPointer<vtkActor> outlineActor =
-		vtkSmartPointer<vtkActor>::New();
-	outlineActor->SetMapper(outlineMapper);
-
 	// Visualize
 	vtkSmartPointer<vtkRenderWindowInteractor> interactor =
 		vtkSmartPointer<vtkRenderWindowInteractor>::New();
-	vtkSmartPointer<vtkImageViewer2> viewer =
-		vtkSmartPointer<vtkImageViewer2>::New();
-	viewer->SetInputData(data);
-	viewer->SetupInteractor(interactor);
-	viewer->GetRenderer()->AddActor(contourActor);
+
+	MyImageViewer2* viewer2 = MyImageViewer2::New();
+	viewer2->SetInputData(data);
+	viewer2->SetAnnotationImage(niftiImageReader2->GetOutput());
+	viewer2->SetLookupTable(lookupTable);
+	viewer2->GetAnnotationActor()->SetVisibility(false);
+
+	viewer2->GetRenderer()->AddActor(contourActor);
+	viewer2->SetupInteractor(interactor);
+
+	//vtkSmartPointer<vtkImageViewer2> viewer =
+	//	vtkSmartPointer<vtkImageViewer2>::New();
+	//viewer->SetInputData(data);
+	//viewer->SetupInteractor(interactor);
+	//viewer->GetRenderer()->AddActor(contourActor);
 
 	vtkSmartPointer<vtkSliderRepresentation3D> sliderRep =
 		vtkSmartPointer<vtkSliderRepresentation3D>::New();
@@ -138,7 +154,7 @@ int main(int, char *[])
 		vtkSmartPointer<vtkInteractorStyleImage>::New();
 	interactor->SetInteractorStyle(style);
 
-	viewer->Render();
+	viewer2->Render();
 	interactor->Start();
 
 	return EXIT_SUCCESS;
