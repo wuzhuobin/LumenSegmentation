@@ -97,7 +97,7 @@ int main(int, char *[])
 	viewer2->GetAnnotationActor()->SetVisibility(false);
 	viewer2->SetLookupTable(lookupTable);
 	viewer2->SetupInteractor(renderWindowInteractor);
-	viewer2->SetSize(500, 500);
+	viewer2->SetSize(1000, 1000);
 	viewer2->Render();
 
 	vtkSmartPointer<InteractorStylePolygonDraw> polygonDraw =

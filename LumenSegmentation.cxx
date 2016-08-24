@@ -145,7 +145,6 @@ void LumenSegmentaiton::Update()
 		vtkSmartPointer<vtkGeometryFilter> gfilter = vtkSmartPointer<vtkGeometryFilter>::New();
 		gfilter->SetInputConnection(thres->GetOutputPort());
 		gfilter->Update();
-
 		vtkSmartPointer<vtkPolyData>lumenWallPolyData = gfilter->GetOutput();
 		cout << "lumenWallPolyData has number of points" << gfilter->GetOutput()->GetNumberOfPoints() << endl;
 
