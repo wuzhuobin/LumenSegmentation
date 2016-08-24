@@ -5,7 +5,18 @@ if (NOT VTK_FOUND)
 	message(FATAL_ERROR "error: VTK is not found")
 endif()
 include(${VTK_USE_FILE})
+set(
+	MAIN_INCLUDE_DIRS
+	${PROJECT_SOURCE_DIR}
+	${PROJECT_BINARY_DIR}
+	${PROJECT_SOURCE_DIR}/AbstractInteractorStyles
+	${PROJECT_BINARY_DIR}/AbstractInteractorStyles
+)
 
+add_subdirectory(AbstractInteractorStyles)
+include_directories(
+	${MAIN_INCLUDE_DIRS}
+)
 SET(
 	LIBRARY_OUTPUT_PATH
 	${CMAKE_SOURCE_DIR}/lib
@@ -44,6 +55,7 @@ add_executable(
 
 target_link_libraries(
 	LumenSegmentation
+	InteractorStyles
 	${VTK_LIBRARIES}
 )
 

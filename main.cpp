@@ -17,6 +17,7 @@
 #include <vtkRenderWindowInteractor.h>
 #include <vtkContourFilter.h>
 #include <vtkXMLImageDataWriter.h>
+#include <vtkCallbackCommand.h>
 
 ///
 #include <vtkNIFTIImageReader.h>
@@ -24,12 +25,20 @@
 #include <vtkInteractorStyleImage.h>
 #include "LumenSegmentation.h"
 #include "MyImageViewer2.h"
-#include "MyImageViewer2.h"
-#include "vtkImageViewer2.h"
+#include "InteractorStylePolygonDraw.h"
 
 #include <iostream>
 using namespace std;
 
+void KeypressCallbackFunction(vtkObject* caller, long unsigned int vtkNotUsed(eventId), void* vtkNotUsed(clientData), void* vtkNotUsed(callData))
+{
+	std::cout << "Keypress callback" << std::endl;
+
+	vtkRenderWindowInteractor *iren =
+		static_cast<vtkRenderWindowInteractor*>(caller);
+
+	std::cout << "Pressed: " << iren->GetKeySym() << std::endl;
+}
 
 int main(int, char *[])
 {
@@ -39,14 +48,22 @@ int main(int, char *[])
 	vtkSmartPointer<vtkNIFTIImageReader> niftiImageReader1 =
 		vtkSmartPointer<vtkNIFTIImageReader>::New();
 	niftiImageReader1->SetFileName(
-		"C:\\Users\\jieji\\Desktop\\MACOSX_BUNDLE\\JackyData\\nifti_corrected\\CUBE T1 corrected.nii");
+		"E:\\Andy\\blood_vessel_v_1.0.0\\Data\\JackyData\\nifti_corrected\\CUBE_T1_corrected.nii"
+		/*"C:\\Users\\jieji\\Desktop\\MACOSX_BUNDLE\\JackyData\\nifti_corrected\\CUBE T1 corrected.nii"*/);
 	niftiImageReader1->Update();
 
 	vtkSmartPointer<vtkNIFTIImageReader> niftiImageReader2 =
 		vtkSmartPointer<vtkNIFTIImageReader>::New();
 	niftiImageReader2->SetFileName(
-		"C:\\Users\\jieji\\Desktop\\MACOSX_BUNDLE\\JackyData\\nifti_corrected\\segmentation_right.nii");
-	niftiImageReader2->Update();
+		"E:\\Andy\\blood_vessel_v_1.0.0\\Data\\JackyData\\nifti_corrected\\segmentation_right.nii"
+		/*"C:\\Users\\jieji\\Desktop\\MACOSX_BUNDLE\\JackyData\\nifti_corrected\\segmentation_right.nii"*/);
+
+
+	vtkSmartPointer<vtkExtractVOI> extractVOI =
+		vtkSmartPointer<vtkExtractVOI>::New();
+	extractVOI->SetVOI(voi);
+	extractVOI->SetInputConnection(niftiImageReader1->GetOutputPort());
+	extractVOI->Update();
 
 	vtkSmartPointer<vtkLookupTable> lookupTable =
 		vtkSmartPointer<vtkLookupTable>::New();
@@ -61,35 +78,30 @@ int main(int, char *[])
 	lookupTable->SetTableValue(6, 1, 0, 1, 1);
 	lookupTable->Build();
 
-	vtkSmartPointer<LumenSegmentaiton> ls =
-		vtkSmartPointer<LumenSegmentaiton>::New();
-	ls->SetInputData(niftiImageReader1->GetOutput());
-	ls->SetVOI(voi);
-	ls->SetGenerateValues(1, 60, 60);
-	ls->Update();
-	
 
-	vtkSmartPointer<vtkPolyDataMapper> contourMapper =
-		vtkSmartPointer<vtkPolyDataMapper>::New();
-	contourMapper->SetInputData(ls->contour);
 
-	// Create an actor for the contours
-	vtkSmartPointer<vtkActor> contourActor =
-		vtkSmartPointer<vtkActor>::New();
-	contourActor->SetMapper(contourMapper);
+	//vtkSmartPointer<vtkCallbackCommand> keypressCallback =
+	//	vtkSmartPointer<vtkCallbackCommand>::New();
+	//keypressCallback->SetCallback(KeypressCallbackFunction);
 
 	 //Visualize
-	vtkSmartPointer<vtkRenderWindowInteractor> interactor =
+	vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor =
 		vtkSmartPointer<vtkRenderWindowInteractor>::New();
+	//renderWindowInteractor->AddObserver(vtkCommand::KeyPressEvent, keypressCallback);
 
 	MyImageViewer2* viewer2 = MyImageViewer2::New();
-	viewer2->SetInputData(ls->GetOutput());
-	viewer2->SetAnnotationImage(niftiImageReader2->GetOutput());
-	viewer2->SetLookupTable(lookupTable);
+	viewer2->SetInputData(extractVOI->GetOutput());
+	viewer2->SetAnnotationImage(extractVOI->GetOutput());
 	viewer2->GetAnnotationActor()->SetVisibility(false);
-	viewer2->GetRenderer()->AddActor(contourActor);
-	viewer2->SetupInteractor(interactor);
+	viewer2->SetLookupTable(lookupTable);
+	viewer2->SetupInteractor(renderWindowInteractor);
 	viewer2->Render();
+
+	vtkSmartPointer<InteractorStylePolygonDraw> polygonDraw =
+		vtkSmartPointer<InteractorStylePolygonDraw>::New();
+	polygonDraw->SetImageViewer(viewer2);
+	renderWindowInteractor->SetInteractorStyle(polygonDraw);
+	
 
 
 	//vtkSmartPointer<vtkImageViewer2> viewer =
@@ -107,7 +119,7 @@ int main(int, char *[])
 	//renderWindow->AddRenderer(renderer);
 	//interactor->SetRenderWindow(renderWindow);
 
-	interactor->Start();
+	renderWindowInteractor->Start();
 
 	return EXIT_SUCCESS;
 }

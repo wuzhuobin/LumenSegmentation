@@ -5,6 +5,9 @@
 #include <vtkImageData.h>
 #include <vtkSmartPointer.h>
 #include <vtkPolyData.h>
+#include <vtkPolyDataCollection.h>
+
+#include <vtkOrientedGlyphContourRepresentation.h>
 
 
 class LumenSegmentaiton : public vtkObject
@@ -17,7 +20,7 @@ public:
 
 	void SetInputData(vtkImageData* input);
 
-	vtkImageData* GetOutput();
+	vtkOrientedGlyphContourRepresentation* GetOutput();
 
 	void SetVOI(int* VOI);
 	void SetVOI(int extent0, int extent1, int extent2, 
@@ -27,18 +30,20 @@ public:
 	void SetGenerateValues(double generateValues0, double generateValues1, double generateValues2);
 	void SetGenerateValues(double* generateValues);
 
+	void SetContourRepresentation(vtkOrientedGlyphContourRepresentation* contourRepresentation);
+
 	void Update();
 
 //protected:
 	LumenSegmentaiton();
 	~LumenSegmentaiton() {};
 
-	//int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *);
-
-
-	vtkSmartPointer<vtkPolyData> contour;
-	vtkSmartPointer<vtkImageData> input;
-	vtkSmartPointer<vtkImageData> output;
+	vtkSmartPointer<vtkPolyData> m_contour = NULL;
+	vtkSmartPointer<vtkImageData> input = NULL;
+	vtkSmartPointer<vtkImageData> extract = NULL;
+	//vtkSmartPointer<vtkPolyDataCollection> regions;
+	vtkSmartPointer<vtkOrientedGlyphContourRepresentation> vesselWallContourRepresentation;
+	vtkSmartPointer<vtkOrientedGlyphContourRepresentation> lumenWallContourRepresentation;
 
 	double generateValues[3] = { 0 };
 	int VOI[6] = { 0 };
