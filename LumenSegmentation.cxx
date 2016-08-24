@@ -10,7 +10,7 @@
 #include <vtkMath.h>
 #include <vtkPolygon.h>
 
-#include <vtkXMLPolyDataWriter.h>
+//#include <vtkXMLPolyDataWriter.h>
 
 vtkStandardNewMacro(LumenSegmentaiton)
 
@@ -58,9 +58,24 @@ void LumenSegmentaiton::SetGenerateValues(double * generateValues)
 	memcpy(this->generateValues, generateValues, sizeof(this->generateValues));
 }
 
-void LumenSegmentaiton::SetContourRepresentation(vtkOrientedGlyphContourRepresentation * contourRepresentation)
+void LumenSegmentaiton::SetVesselWallContourRepresentation(vtkOrientedGlyphContourRepresentation * vesselWallContourRepresentation)
 {
-	this->vesselWallContourRepresentation = contourRepresentation;
+	this->vesselWallContourRepresentation = vesselWallContourRepresentation;
+}
+
+void LumenSegmentaiton::SetLumenWallContourRepresentation(vtkOrientedGlyphContourRepresentation * lumenWallContourRepresentation)
+{
+	this->lumenWallContourRepresentation = lumenWallContourRepresentation;
+}
+
+vtkOrientedGlyphContourRepresentation * LumenSegmentaiton::GetVesselWallContourRepresentation()
+{
+	return this->vesselWallContourRepresentation;
+}
+
+vtkOrientedGlyphContourRepresentation * LumenSegmentaiton::GetLumenWallContourRepresentation()
+{
+	return this->lumenWallContourRepresentation;
 }
 
 void LumenSegmentaiton::Update()
@@ -68,24 +83,16 @@ void LumenSegmentaiton::Update()
 	vtkSmartPointer<vtkPolyData> vesselWallPolyData = this->vesselWallContourRepresentation->GetContourRepresentationAsPolyData();
 	vtkSmartPointer<vtkPolygon> vesselWallPolygon = vtkSmartPointer<vtkPolygon>::New();
 
-	int numOfPoints = vesselWallPolyData->GetNumberOfPoints();
-	double origin[3], spacing[3];
-	double lastPoint[3] = { VTK_DOUBLE_MAX, VTK_DOUBLE_MAX, VTK_DOUBLE_MAX };
-	this->input->GetOrigin(origin);
-	this->input->GetSpacing(spacing);
 
-	for (vtkIdType i = 0; i < numOfPoints; i++)
+	double lastPoint[3] = { VTK_DOUBLE_MAX, VTK_DOUBLE_MAX, VTK_DOUBLE_MAX };
+
+	// add all vesselWallPolyData into vesselWallPolygon
+	for (vtkIdType i = 0; i < vesselWallPolyData->GetNumberOfPoints(); i++)
 	{
 		double displayCoordinate[3];
 
 		vesselWallPolyData->GetPoint(i, displayCoordinate);
 
-		//Take one image data 1 to be reference
-		displayCoordinate[0] = (displayCoordinate[0] - origin[0]) / spacing[0];
-		displayCoordinate[1] = (displayCoordinate[1] - origin[1]) / spacing[1];
-		displayCoordinate[2] = (displayCoordinate[2] - origin[2]) / spacing[2];
-		//cout << s[0] << " " << s[1] << " " << s[2] << endl;
-		//Test whether the points are inside the polygon or not
 		// if the points is too close to the previous point, skip it to avoid error in PointInPolygon algorithm
 		double d = vtkMath::Distance2BetweenPoints(lastPoint, displayCoordinate);
 		if (d < 1E-5)
@@ -104,12 +111,14 @@ void LumenSegmentaiton::Update()
 	extractVOI->Update();
 	extract = extractVOI->GetOutput();
 
+	// ouput contour as PolyData
 	vtkSmartPointer<vtkContourFilter> contourFilter =
 		vtkSmartPointer<vtkContourFilter>::New();
 	contourFilter->SetInputConnection(extractVOI->GetOutputPort());
 	contourFilter->GenerateValues(generateValues[0], generateValues[1], generateValues[2]); // (numContours, rangeStart, rangeEnd)
 	contourFilter->Update();
 
+	// output connected contour as PolyData
 	vtkSmartPointer<vtkPolyDataConnectivityFilter> connectivityFilter =
 		vtkSmartPointer<vtkPolyDataConnectivityFilter>::New();
 	connectivityFilter->SetInputConnection(contourFilter->GetOutputPort());
@@ -120,35 +129,54 @@ void LumenSegmentaiton::Update()
 
 	bool foundFlag = false;
 	// Generate the threshold
-	for (int i = 0; i < connectivityFilter->GetNumberOfExtractedRegions(); i++)
+	for (int i = 0; i < connectivityFilter->GetNumberOfExtractedRegions() && !foundFlag; i++)
 	{
-		if (foundFlag == true)
-			break;
+		//if (foundFlag == true)
+			//break;
 		cout << "finding in loop " << i << endl;
 		vtkSmartPointer<vtkThreshold> thres = vtkSmartPointer<vtkThreshold>::New();
 		thres->SetInputConnection(connectivityFilter->GetOutputPort());
+		// using RegionID as the threshold of Threshold Filter
 		thres->SetInputArrayToProcess(1, 0, 0, vtkDataObject::FIELD_ASSOCIATION_POINTS, "RegionID");
 		thres->ThresholdBetween((double)i - 0.1, (double)i + 0.1);
 		thres->Update();
 
+		// convert UnstructedGrid data to PolyData
 		vtkSmartPointer<vtkGeometryFilter> gfilter = vtkSmartPointer<vtkGeometryFilter>::New();
 		gfilter->SetInputConnection(thres->GetOutputPort());
 		gfilter->Update();
 
-		// check each loop if it is inside the region specified by contour widget
 		vtkSmartPointer<vtkPolyData>lumenWallPolyData = gfilter->GetOutput();
 		cout << "lumenWallPolyData has number of points" << gfilter->GetOutput()->GetNumberOfPoints() << endl;
+
+		// clear all nodes from the last polyData
+		if (this->lumenWallContourRepresentation != NULL) {
+			this->lumenWallContourRepresentation->ClearAllNodes();
+		}
+
+		// check each loop if it is inside the region specified by contour widget
 		for (vtkIdType j = 0; j < lumenWallPolyData->GetNumberOfPoints(); ++j) {
+
+			cout << lumenWallPolyData->GetPoint(j)[0] << ' ' << lumenWallPolyData->GetPoint(j)[1] << ' '
+				<< lumenWallPolyData->GetPoint(j)[2] << endl;
+			if (this->lumenWallContourRepresentation != NULL) {
+				this->lumenWallContourRepresentation->AddNodeAtWorldPosition(lumenWallPolyData->GetPoint(j));
+			}
 			cout << "finding in " << j << endl;
+			// Test whether the points are inside the vesselWallPolygon or not
+			// if one of the point is not inside break and goto next  
 			if (!vesselWallPolygon->PointInPolygon(lumenWallPolyData->GetPoint(j),
 				vesselWallPolygon->GetPoints()->GetNumberOfPoints(),
 				static_cast<double*>(vesselWallPolygon->GetPoints()->GetData()->GetVoidPointer(0)),
 				vesselWallPolygon->GetPoints()->GetBounds(), vesselWallPolygonNormal)) {
 				break;
 			}
+			// if the last point is still in the vesselWallPolygon 
+			// set foundFlag to true and save its polyData
 			if (j == (lumenWallPolyData->GetNumberOfPoints() - 1)) {
 				foundFlag = true;
 				cout << "foundFlat" << endl;
+
 				vtkSmartPointer<vtkPolyDataConnectivityFilter> connectivityFilter =
 					vtkSmartPointer<vtkPolyDataConnectivityFilter>::New();
 				connectivityFilter->SetInputConnection(contourFilter->GetOutputPort());
@@ -156,9 +184,9 @@ void LumenSegmentaiton::Update()
 				connectivityFilter->AddSpecifiedRegion(i);
 				connectivityFilter->Update();
 				this->m_contour = connectivityFilter->GetOutput();
+				//this->m_contour->getcells
 			}
 		}
-		//this->m_contour = 
 		
 	}
 
@@ -204,11 +232,4 @@ void LumenSegmentaiton::Update()
 
 
 
-}
-
-LumenSegmentaiton::LumenSegmentaiton()
-{
-	//this->input = vtkSmartPointer<vtkImageData>::New();
-	//this->regions = vtkSmartPointer<vtkPolyDataCollection>::New();
-	this->lumenWallContourRepresentation = NULL;
 }

@@ -102,6 +102,10 @@ void InteractorStylePolygonDraw::OnKeyPress()
 
 	std::cout << key << endl;
 
+	if (key == "n") {
+		NewContourWidget();
+	}
+
 	if (key == "a") {
 		cout << "FILLPOLYGON" << endl;
 		FillPolygon();
@@ -162,24 +166,24 @@ void InteractorStylePolygonDraw::SetPolygonModeEnabled(bool b)
 		m_contourRep->AlwaysOnTopOn();
 
 
-		vtkPolyData* cursorpolyData = m_contourRep->GetActiveCursorShape();
-		vtkSmartPointer<vtkTransform> translation = vtkSmartPointer<vtkTransform>::New();
-		if (orientation == 0) {
-			translation->RotateX(90);
-			translation->RotateZ(90);
-		}
-		else if (orientation == 1) {
-			translation->RotateX(90);
-			translation->RotateY(90);
-		}
+		//vtkPolyData* cursorpolyData = m_contourRep->GetActiveCursorShape();
+		//vtkSmartPointer<vtkTransform> translation = vtkSmartPointer<vtkTransform>::New();
+		//if (orientation == 0) {
+		//	translation->RotateX(90);
+		//	translation->RotateZ(90);
+		//}
+		//else if (orientation == 1) {
+		//	translation->RotateX(90);
+		//	translation->RotateY(90);
+		//}
 
-		vtkSmartPointer<vtkTransformPolyDataFilter> transformFilter = 
-			vtkSmartPointer<vtkTransformPolyDataFilter>::New();
-		transformFilter->SetInputData(cursorpolyData);
-		transformFilter->SetTransform(translation);
-		transformFilter->Update();
+		//vtkSmartPointer<vtkTransformPolyDataFilter> transformFilter = 
+		//	vtkSmartPointer<vtkTransformPolyDataFilter>::New();
+		//transformFilter->SetInputData(cursorpolyData);
+		//transformFilter->SetTransform(translation);
+		//transformFilter->Update();
 
-		cursorpolyData->DeepCopy(transformFilter->GetOutput());
+		//cursorpolyData->DeepCopy(transformFilter->GetOutput());
 		m_contourRep->BuildRepresentation();
 		m_contourWidget->SetRepresentation(m_contourRep);
 		m_contourWidget->FollowCursorOn();
@@ -207,6 +211,20 @@ void InteractorStylePolygonDraw::DisplayPolygon(vtkObject* caller, long unsigned
 
 void InteractorStylePolygonDraw::FillPolygon()
 {
+
+	vtkSmartPointer<vtkContourWidget> contourWidget =
+		vtkSmartPointer<vtkContourWidget>::New();
+	contourWidget->SetInteractor(this->Interactor);
+	contourWidget->SetDefaultRenderer(imageViewer->GetRenderer());
+
+	vtkSmartPointer<vtkOrientedGlyphContourRepresentation> contourRep =
+		vtkSmartPointer<vtkOrientedGlyphContourRepresentation>::New();
+	contourRep->SetRenderer(imageViewer->GetRenderer());
+	contourRep->SetNeedToRender(true);
+	contourRep->GetLinesProperty()->SetColor(0, 255, 0);
+	contourRep->SetLineInterpolator(NULL);
+	contourRep->AlwaysOnTopOn();
+
 	int voi[6] = { 100,200,200,300,55,55 };
 
 	vtkSmartPointer<LumenSegmentaiton> ls =
@@ -214,10 +232,16 @@ void InteractorStylePolygonDraw::FillPolygon()
 	ls->SetInputData(imageViewer->GetInput());
 	ls->SetVOI(voi);
 	ls->SetGenerateValues(1, 60, 60);
-	ls->SetContourRepresentation(this->m_contourRep);
+	ls->SetVesselWallContourRepresentation(this->m_contourRep);
+	ls->SetLumenWallContourRepresentation(contourRep);
 	ls->Update();
 
-	
+	contourWidget->On();
+	contourWidget->Initialize(ls->m_contour);
+	ls->m_contour->getcellara
+	double n[2];
+	contourRep->GetNthNodeDisplayPosition(1, n);
+	cout << n[0] << ' ' << n[1] << ' ' << endl;
 
 	vtkSmartPointer<vtkPolyDataMapper> contourMapper =
 		vtkSmartPointer<vtkPolyDataMapper>::New();
@@ -227,8 +251,52 @@ void InteractorStylePolygonDraw::FillPolygon()
 	vtkSmartPointer<vtkActor> contourActor =
 		vtkSmartPointer<vtkActor>::New();
 	contourActor->SetMapper(contourMapper);
-
 	imageViewer->GetRenderer()->AddActor(contourActor);
 
+
+}
+
+void InteractorStylePolygonDraw::NewContourWidget()
+{
+		vtkContourWidget* m_contourWidget = vtkContourWidget::New();
+		m_contourWidget->SetInteractor(this->Interactor);
+		m_contourWidget->SetDefaultRenderer(imageViewer->GetRenderer());
+
+		vtkOrientedGlyphContourRepresentation* m_contourRep = vtkOrientedGlyphContourRepresentation::New();
+		m_contourRep->SetRenderer(imageViewer->GetRenderer());
+		m_contourRep->SetNeedToRender(true);
+		m_contourRep->GetLinesProperty()->SetColor(255, 255, 0);
+		m_contourRep->SetLineInterpolator(NULL);
+		m_contourRep->AlwaysOnTopOn();
+
+
+		//vtkPolyData* cursorpolyData = m_contourRep->GetActiveCursorShape();
+		//vtkSmartPointer<vtkTransform> translation = vtkSmartPointer<vtkTransform>::New();
+		//if (orientation == 0) {
+		//	translation->RotateX(90);
+		//	translation->RotateZ(90);
+		//}
+		//else if (orientation == 1) {
+		//	translation->RotateX(90);
+		//	translation->RotateY(90);
+		//}
+
+		//vtkSmartPointer<vtkTransformPolyDataFilter> transformFilter = 
+		//	vtkSmartPointer<vtkTransformPolyDataFilter>::New();
+		//transformFilter->SetInputData(cursorpolyData);
+		//transformFilter->SetTransform(translation);
+		//transformFilter->Update();
+
+		//cursorpolyData->DeepCopy(transformFilter->GetOutput());
+		m_contourRep->BuildRepresentation();
+		m_contourWidget->SetRepresentation(m_contourRep);
+		m_contourWidget->FollowCursorOn();
+		m_contourWidget->ContinuousDrawOn();
+		//m_contourWidget->CreateDefaultRepresentation();
+		m_contourWidget->On();
+		m_contourWidget->EnabledOn();
+
+		this->imageViewer->Render();
+		this->CONTOUR_IS_ON_FLAG = true;
 }
 

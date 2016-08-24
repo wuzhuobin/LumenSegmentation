@@ -30,20 +30,21 @@ public:
 	void SetGenerateValues(double generateValues0, double generateValues1, double generateValues2);
 	void SetGenerateValues(double* generateValues);
 
-	void SetContourRepresentation(vtkOrientedGlyphContourRepresentation* contourRepresentation);
-
+	void SetVesselWallContourRepresentation(vtkOrientedGlyphContourRepresentation* vesselWallContourRepresentation);
+	void SetLumenWallContourRepresentation(vtkOrientedGlyphContourRepresentation* lumenWallContourRepresentation);
+	vtkOrientedGlyphContourRepresentation* GetVesselWallContourRepresentation();
+	vtkOrientedGlyphContourRepresentation* GetLumenWallContourRepresentation();
 	void Update();
 
 //protected:
-	LumenSegmentaiton();
+	LumenSegmentaiton() {};
 	~LumenSegmentaiton() {};
 
 	vtkSmartPointer<vtkPolyData> m_contour = NULL;
 	vtkSmartPointer<vtkImageData> input = NULL;
 	vtkSmartPointer<vtkImageData> extract = NULL;
-	//vtkSmartPointer<vtkPolyDataCollection> regions;
-	vtkSmartPointer<vtkOrientedGlyphContourRepresentation> vesselWallContourRepresentation;
-	vtkSmartPointer<vtkOrientedGlyphContourRepresentation> lumenWallContourRepresentation;
+	vtkSmartPointer<vtkOrientedGlyphContourRepresentation> vesselWallContourRepresentation = NULL;
+	vtkSmartPointer<vtkOrientedGlyphContourRepresentation> lumenWallContourRepresentation = NULL;
 
 	double generateValues[3] = { 0 };
 	int VOI[6] = { 0 };

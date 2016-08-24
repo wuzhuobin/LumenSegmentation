@@ -52,6 +52,7 @@ private:
 	bool CheckDoubleClicked();
 	void DisplayPolygon(vtkObject*, long unsigned, void*);
 	void FillPolygon();
+	void NewContourWidget();
 
 	QTime m_timer;
 	int m_firstClickTimeStamp;

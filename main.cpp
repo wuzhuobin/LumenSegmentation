@@ -48,15 +48,17 @@ int main(int, char *[])
 	vtkSmartPointer<vtkNIFTIImageReader> niftiImageReader1 =
 		vtkSmartPointer<vtkNIFTIImageReader>::New();
 	niftiImageReader1->SetFileName(
-		"E:\\Andy\\blood_vessel_v_1.0.0\\Data\\JackyData\\nifti_corrected\\CUBE_T1_corrected.nii"
-		/*"C:\\Users\\jieji\\Desktop\\MACOSX_BUNDLE\\JackyData\\nifti_corrected\\CUBE T1 corrected.nii"*/);
+		//"E:\\Andy\\blood_vessel_v_1.0.0\\Data\\JackyData\\nifti_corrected\\CUBE_T1_corrected.nii"
+		"C:\\Users\\jieji\\Desktop\\MACOSX_BUNDLE\\JackyData\\nifti_corrected\\CUBE T1 corrected.nii"
+	);
 	niftiImageReader1->Update();
 
 	vtkSmartPointer<vtkNIFTIImageReader> niftiImageReader2 =
 		vtkSmartPointer<vtkNIFTIImageReader>::New();
 	niftiImageReader2->SetFileName(
-		"E:\\Andy\\blood_vessel_v_1.0.0\\Data\\JackyData\\nifti_corrected\\segmentation_right.nii"
-		/*"C:\\Users\\jieji\\Desktop\\MACOSX_BUNDLE\\JackyData\\nifti_corrected\\segmentation_right.nii"*/);
+		//"E:\\Andy\\blood_vessel_v_1.0.0\\Data\\JackyData\\nifti_corrected\\segmentation_right.nii"
+		"C:\\Users\\jieji\\Desktop\\MACOSX_BUNDLE\\JackyData\\nifti_corrected\\segmentation_right.nii"
+	);
 
 
 	vtkSmartPointer<vtkExtractVOI> extractVOI =
@@ -95,6 +97,7 @@ int main(int, char *[])
 	viewer2->GetAnnotationActor()->SetVisibility(false);
 	viewer2->SetLookupTable(lookupTable);
 	viewer2->SetupInteractor(renderWindowInteractor);
+	viewer2->SetSize(500, 500);
 	viewer2->Render();
 
 	vtkSmartPointer<InteractorStylePolygonDraw> polygonDraw =
