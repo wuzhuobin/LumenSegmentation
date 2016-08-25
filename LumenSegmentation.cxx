@@ -110,15 +110,15 @@ void LumenSegmentaiton::Update()
 	const int* extent = input->GetExtent();
 	int newVOI[4];
 	// uising the vesselWallPolygon to find a smaller VOI to extract
-	newVOI[0] = (bounds[0] - origin[0]) / spacing[0] - 1;
-	newVOI[1] = (bounds[1] - origin[0]) / spacing[0] + 1;
-	newVOI[2] = (bounds[2] - origin[1]) / spacing[1] - 1;
-	newVOI[3] = (bounds[3] - origin[1]) / spacing[1] + 1;
+	//newVOI[0] = (bounds[0] - origin[0]) / spacing[0] - 1;
+	//newVOI[1] = (bounds[1] - origin[0]) / spacing[0] + 1;
+	//newVOI[2] = (bounds[2] - origin[1]) / spacing[1] - 1;
+	//newVOI[3] = (bounds[3] - origin[1]) / spacing[1] + 1;
 
-	this->VOI[0] = newVOI[0] >= extent[0] ? newVOI[0] : extent[0];
-	this->VOI[1] = newVOI[1] <= extent[1] ? newVOI[1] : extent[1];
-	this->VOI[2] = newVOI[2] >= extent[2] ? newVOI[2] : extent[2];
-	this->VOI[3] = newVOI[3] <= extent[3] ? newVOI[3] : extent[3];
+	//this->VOI[0] = newVOI[0] >= extent[0] ? newVOI[0] : extent[0];
+	//this->VOI[1] = newVOI[1] <= extent[1] ? newVOI[1] : extent[1];
+	//this->VOI[2] = newVOI[2] >= extent[2] ? newVOI[2] : extent[2];
+	//this->VOI[3] = newVOI[3] <= extent[3] ? newVOI[3] : extent[3];
 
 	vtkSmartPointer<vtkExtractVOI> extractVOI =
 		vtkSmartPointer<vtkExtractVOI>::New();

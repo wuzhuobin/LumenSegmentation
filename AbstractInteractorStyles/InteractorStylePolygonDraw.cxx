@@ -31,6 +31,7 @@ Copyright (C) 2016
 
 #include "InteractorStylePolygonDraw.h"
 #include "LumenSegmentation.h"
+#include "MyImageViewer2.h"
 //#include "MainWindow.h"
 
 vtkStandardNewMacro(InteractorStylePolygonDraw);
@@ -172,7 +173,16 @@ void InteractorStylePolygonDraw::SetPolygonModeEnabled(bool b)
 	if (b)
 	{
 		m_vesselWallContourRepresentation = vtkOrientedGlyphContourRepresentation::New();
-		m_vesselWallContourRepresentation->SetRenderer(imageViewer->GetRenderer());
+
+		MyImageViewer2* viewer2 = dynamic_cast<MyImageViewer2*>(imageViewer);
+		if (viewer2 != NULL) {
+			cout << "viewer2" << endl;
+			m_vesselWallContourRepresentation->SetRenderer(viewer2->GetAnnotationRenderer());
+		}
+		else{
+			m_vesselWallContourRepresentation->SetRenderer(imageViewer->GetRenderer());
+		}
+
 		m_vesselWallContourRepresentation->SetNeedToRender(true);
 		m_vesselWallContourRepresentation->GetLinesProperty()->SetColor(0, 0, 255);
 		m_vesselWallContourRepresentation->SetLineInterpolator(NULL);
@@ -182,7 +192,14 @@ void InteractorStylePolygonDraw::SetPolygonModeEnabled(bool b)
 		m_vesselWallContourWidget = vtkContourWidget::New();
 		m_vesselWallContourWidget->SetInteractor(this->Interactor);
 		m_vesselWallContourWidget->SetRepresentation(m_vesselWallContourRepresentation);
-		m_vesselWallContourWidget->SetDefaultRenderer(imageViewer->GetRenderer());
+		if (viewer2 != NULL) {
+			cout << "viewer2" << endl;
+
+			m_vesselWallContourWidget->SetDefaultRenderer(viewer2->GetAnnotationRenderer());
+		}
+		else {
+			m_vesselWallContourWidget->SetDefaultRenderer(imageViewer->GetRenderer());
+		}
 		m_vesselWallContourWidget->FollowCursorOn();
 		m_vesselWallContourWidget->ContinuousDrawOn();
 		//m_vesselWallContourWidget->CreateDefaultRepresentation();
@@ -225,7 +242,14 @@ void InteractorStylePolygonDraw::GenerateLumenWallContourWidget()
 	}
 	if (this->CONTOUR_IS_ON_FLAG) {
 		m_lumenWallContourRepresentation = vtkOrientedGlyphContourRepresentation::New();
-		m_lumenWallContourRepresentation->SetRenderer(imageViewer->GetRenderer());
+		MyImageViewer2* viewer2 = dynamic_cast<MyImageViewer2*>(imageViewer);
+		if (viewer2 != NULL) {
+			cout << "viewer2" << endl;
+			m_lumenWallContourRepresentation->SetRenderer(viewer2->GetAnnotationRenderer());
+		}
+		else {
+			m_lumenWallContourRepresentation->SetRenderer(imageViewer->GetRenderer());
+		}
 		m_lumenWallContourRepresentation->SetNeedToRender(true);
 		m_lumenWallContourRepresentation->GetLinesProperty()->SetColor(255, 0, 0);
 		m_lumenWallContourRepresentation->SetLineInterpolator(NULL);
@@ -235,7 +259,13 @@ void InteractorStylePolygonDraw::GenerateLumenWallContourWidget()
 		m_lumenWallContourWidget = vtkContourWidget::New();
 		m_lumenWallContourWidget->SetInteractor(this->Interactor);
 		m_lumenWallContourWidget->SetRepresentation(m_lumenWallContourRepresentation);
-		m_lumenWallContourWidget->SetDefaultRenderer(imageViewer->GetRenderer());
+		if (viewer2 != NULL) {
+			cout << "viewer2" << endl;
+			m_lumenWallContourWidget->SetDefaultRenderer(viewer2->GetAnnotationRenderer());
+		}
+		else {
+			m_lumenWallContourWidget->SetDefaultRenderer(imageViewer->GetRenderer());
+		}
 		m_lumenWallContourWidget->FollowCursorOn();
 		m_lumenWallContourWidget->ContinuousDrawOn();
 		m_lumenWallContourWidget->On();
@@ -244,9 +274,11 @@ void InteractorStylePolygonDraw::GenerateLumenWallContourWidget()
 		vtkSmartPointer<LumenSegmentaiton> ls =
 			vtkSmartPointer<LumenSegmentaiton>::New();
 		ls->SetInputData(imageViewer->GetInput());
-		ls->SetSlice(this->m_slice);
-		int voi[6] = { 100,200,200,300,55,55 };
-		ls->SetVOI(voi);
+		cout << "m_slice:";
+		cout << m_slice << endl;
+		ls->SetSlice(imageViewer->GetSlice());
+		//int voi[6] = { 100,200,200,300,55,55 };
+		//ls->SetVOI(voi);
 		ls->SetGenerateValues(1, 60, 60);
 		ls->SetVesselWallContourRepresentation(this->m_vesselWallContourRepresentation);
 		ls->Update();

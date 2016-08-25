@@ -42,7 +42,7 @@ void KeypressCallbackFunction(vtkObject* caller, long unsigned int vtkNotUsed(ev
 
 int main(int, char *[])
 {
-	int voi[6] = { 100,200,200,300,55,55 };
+	int voi[6] = { 100,200,200,300,53,55 };
 	//int voi[6] = { 0,500,0,500,55,55 };
 
 	vtkSmartPointer<vtkNIFTIImageReader> niftiImageReader1 =
@@ -93,12 +93,19 @@ int main(int, char *[])
 
 	MyImageViewer2* viewer2 = MyImageViewer2::New();
 	viewer2->SetInputData(extractVOI->GetOutput());
-	viewer2->SetAnnotationImage(extractVOI->GetOutput());
+	viewer2->SetAnnotationImage(niftiImageReader2->GetOutput());
 	viewer2->GetAnnotationActor()->SetVisibility(false);
 	viewer2->SetLookupTable(lookupTable);
 	viewer2->SetupInteractor(renderWindowInteractor);
 	viewer2->SetSize(1000, 1000);
 	viewer2->Render();
+
+	//vtkSmartPointer<vtkImageViewer2> viewer =
+	//	vtkSmartPointer<vtkImageViewer2>::New();
+	//viewer->SetInputData(niftiImageReader1->GetOutput());
+	//viewer->SetupInteractor(renderWindowInteractor);
+	//viewer->SetSize(1000, 1000);
+	//viewer->Render();
 
 	vtkSmartPointer<InteractorStylePolygonDraw> polygonDraw =
 		vtkSmartPointer<InteractorStylePolygonDraw>::New();
@@ -107,12 +114,7 @@ int main(int, char *[])
 	
 
 
-	//vtkSmartPointer<vtkImageViewer2> viewer =
-	//	vtkSmartPointer<vtkImageViewer2>::New();
-	//viewer->SetInputData(data);
-	//viewer->SetupInteractor(interactor);
-	//viewer->GetRenderer()->AddActor(contourActor);
-	//viewer->Render();
+
 
 	// Original Visualize
 	//vtkSmartPointer<vtkRenderer> renderer =
