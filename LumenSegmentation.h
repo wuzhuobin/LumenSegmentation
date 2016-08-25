@@ -20,7 +20,7 @@ public:
 
 	void SetInputData(vtkImageData* input);
 
-	vtkOrientedGlyphContourRepresentation* GetOutput();
+	vtkPolyData* GetOutput();
 
 	void SetVOI(int* VOI);
 	void SetVOI(int extent0, int extent1, int extent2, 

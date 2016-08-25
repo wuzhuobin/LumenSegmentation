@@ -37,7 +37,6 @@ public:
 	void SetPolygonModeEnabled(bool b);
 	void SetLabel(int label);
 
-	vtkSmartPointer<vtkPolyData> contourData;
 protected:
 	InteractorStylePolygonDraw();
 	~InteractorStylePolygonDraw();
@@ -51,8 +50,10 @@ protected:
 private:
 	bool CheckDoubleClicked();
 	void DisplayPolygon(vtkObject*, long unsigned, void*);
+	
 	void FillPolygon();
-	void NewContourWidget();
+	
+	void GenerateLumenWallContourWidget();
 
 	QTime m_timer;
 	int m_firstClickTimeStamp;
@@ -61,7 +62,9 @@ private:
 	bool CONTOUR_IS_ON_FLAG;
 	int label;
 
-	vtkContourWidget* m_contourWidget;
-	vtkOrientedGlyphContourRepresentation* m_contourRep;
+	vtkContourWidget* m_vesselWallContourWidget;
+	vtkOrientedGlyphContourRepresentation* m_vesselWallContourRepresentation;
+	vtkContourWidget* m_lumenWallContourWidget;
+	vtkOrientedGlyphContourRepresentation* m_lumenWallContourRepresentation;
 	vtkSmartPointer<vtkCallbackCommand> m_callbackFunction;
 };

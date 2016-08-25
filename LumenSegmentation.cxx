@@ -26,9 +26,9 @@ void LumenSegmentaiton::SetInputData(vtkImageData * input)
 	//this->input->GetExtent(this->VOI);
 }
 
-vtkOrientedGlyphContourRepresentation* LumenSegmentaiton::GetOutput()
+vtkPolyData* LumenSegmentaiton::GetOutput()
 {
-	return this->lumenWallContourRepresentation;
+	return this->m_contour;
 }
 
 void LumenSegmentaiton::SetVOI(int * VOI)
@@ -89,20 +89,36 @@ void LumenSegmentaiton::Update()
 	// add all vesselWallPolyData into vesselWallPolygon
 	for (vtkIdType i = 0; i < vesselWallPolyData->GetNumberOfPoints(); i++)
 	{
-		double displayCoordinate[3];
+		double worldCoordinate[3];
 
-		vesselWallPolyData->GetPoint(i, displayCoordinate);
+		vesselWallPolyData->GetPoint(i, worldCoordinate);
 
 		// if the points is too close to the previous point, skip it to avoid error in PointInPolygon algorithm
-		double d = vtkMath::Distance2BetweenPoints(lastPoint, displayCoordinate);
+		double d = vtkMath::Distance2BetweenPoints(lastPoint, worldCoordinate);
 		if (d < 1E-5)
 			continue;
-		memcpy(lastPoint, displayCoordinate, sizeof(double) * 3);
-		vesselWallPolygon->GetPoints()->InsertNextPoint(displayCoordinate[0], displayCoordinate[1], displayCoordinate[2]);
+		memcpy(lastPoint, worldCoordinate, sizeof(double) * 3);
+		vesselWallPolygon->GetPoints()->InsertNextPoint(worldCoordinate[0], worldCoordinate[1], worldCoordinate[2]);
 	}
 	double vesselWallPolygonNormal[3];
 	vesselWallPolygon->ComputeNormal(vesselWallPolygon->GetPoints()->GetNumberOfPoints(),
 		static_cast<double*>(vesselWallPolygon->GetPoints()->GetData()->GetVoidPointer(0)), vesselWallPolygonNormal);
+
+	const double* spacing = input->GetSpacing();
+	const double* origin = input->GetOrigin();
+	const double* bounds = vesselWallPolygon->GetPoints()->GetBounds();
+	const int* extent = input->GetExtent();
+	int newVOI[4];
+	// uising the vesselWallPolygon to find a smaller VOI to extract
+	newVOI[0] = (bounds[0] - origin[0]) / spacing[0] - 1;
+	newVOI[1] = (bounds[1] - origin[0]) / spacing[0] + 1;
+	newVOI[2] = (bounds[2] - origin[1]) / spacing[1] - 1;
+	newVOI[3] = (bounds[3] - origin[1]) / spacing[1] + 1;
+
+	this->VOI[0] = newVOI[0] >= extent[0] ? newVOI[0] : extent[0];
+	this->VOI[1] = newVOI[1] <= extent[1] ? newVOI[1] : extent[1];
+	this->VOI[2] = newVOI[2] >= extent[2] ? newVOI[2] : extent[2];
+	this->VOI[3] = newVOI[3] <= extent[3] ? newVOI[3] : extent[3];
 
 	vtkSmartPointer<vtkExtractVOI> extractVOI =
 		vtkSmartPointer<vtkExtractVOI>::New();
@@ -176,59 +192,17 @@ void LumenSegmentaiton::Update()
 				foundFlag = true;
 				cout << "foundFlat" << endl;
 
-				vtkSmartPointer<vtkPolyDataConnectivityFilter> connectivityFilter =
-					vtkSmartPointer<vtkPolyDataConnectivityFilter>::New();
-				connectivityFilter->SetInputConnection(contourFilter->GetOutputPort());
-				connectivityFilter->SetExtractionModeToSpecifiedRegions();
-				connectivityFilter->AddSpecifiedRegion(i);
-				connectivityFilter->Update();
-				this->m_contour = connectivityFilter->GetOutput();
-				//this->m_contour->getcells
+				//vtkSmartPointer<vtkPolyDataConnectivityFilter> connectivityFilter =
+				//	vtkSmartPointer<vtkPolyDataConnectivityFilter>::New();
+				//connectivityFilter->SetInputConnection(contourFilter->GetOutputPort());
+				//connectivityFilter->SetExtractionModeToSpecifiedRegions();
+				//connectivityFilter->AddSpecifiedRegion(i);
+				//connectivityFilter->Update();
+				this->m_contour = lumenWallPolyData;
 			}
 		}
 		
 	}
-
-
-	//int num = connectivityFilter->GetNumberOfExtractedRegions();
-
-	//for (int i = 0; i < num; ++i) {
-	//	vtkSmartPointer<vtkPolyDataConnectivityFilter> connectivityFilter =
-	//		vtkSmartPointer<vtkPolyDataConnectivityFilter>::New();
-	//	connectivityFilter->SetInputConnection(contourFilter->GetOutputPort());
-	//	connectivityFilter->SetExtractionModeToSpecifiedRegions();
-	//	connectivityFilter->InitializeSpecifiedRegionList();
-	//	connectivityFilter->AddSpecifiedRegion(i);
-	//	connectivityFilter->Update();
-	//	regions->AddItem(connectivityFilter->GetOutput());
-	//}
-	//connectivityFilter->SetExtractionModeToAllRegions();
-	//connectivityFilter->SetExtractionModeToLargestRegion();
-	//connectivityFilter->SetExtractionModeToSpecifiedRegions();
-	//connectivityFilter->AddSpecifiedRegion(5);
-	//connectivityFilter->ColorRegionsOn();
-	//connectivityFilter->Update();
-	//regions->InitTraversal();
-/*
-	this->m_contour = regions->GetNextItem();
-	this->m_contour = regions->GetNextItem();
-	this->m_contour = regions->GetNextItem();
-	this->m_contour = regions->GetNextItem();
-	this->m_contour = regions->GetNextItem();
-*/
-	//vtkSmartPointer<vtkXMLPolyDataWriter> writer = vtkSmartPointer<vtkXMLPolyDataWriter>::New();
-	//writer->SetFileName("E:/Test.vtp");
-	//writer->SetInputData(regions->GetNextItem());
-	//writer->Update();
-	//writer->Write();
-
-
-
-
-
-
-
-
 
 
 }
